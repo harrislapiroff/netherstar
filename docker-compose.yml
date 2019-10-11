@@ -1,0 +1,26 @@
+version: '3'
+services:
+  django:
+    stdin_open: true
+    tty: true
+    build:
+      context: .
+      dockerfile: Dockerfile-django
+    ports:
+    - "8000:8000"
+    volumes:
+    - ./django:/code
+    - /var/run/docker.sock:/var/run/docker.sock
+    - ./data:/data
+    environment:
+      DATABASE_URL: 'postgres://dbuser:dbpass@postgresql/django'
+      DIGITALOCEAN_TOKEN: '${DIGITALOCEAN_TOKEN}'
+    command: ./runserver.sh
+    depends_on:
+    - postgresql
+  postgresql:
+    image: 'postgres:11.5-alpine'
+    environment:
+      POSTGRES_DB: 'django'
+      POSTGRES_USER: 'dbuser'
+      POSTGRES_PASSWORD: 'dbpass'
