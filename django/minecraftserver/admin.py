@@ -9,11 +9,14 @@ from minecraftserver.models import MinecraftVersion
 from minecraftserver.models import ForgeVersion
 from minecraftserver.models import MinecraftMod
 from minecraftserver.models import MinecraftModVersion
+from minecraftserver.models import KeyPair
 
 
 class MinecraftServerAdmin(admin.ModelAdmin):
     readonly_fields = (
-        'container_status',
+        'droplet_id',
+        'droplet_ip',
+        'last_status',
         'install_script',
     )
     actions = (
@@ -23,15 +26,11 @@ class MinecraftServerAdmin(admin.ModelAdmin):
     list_display = (
         'name',
         'version',
+        'last_status',
     )
     filter_horizontal = (
         'mods',
     )
-
-    def container_status(self, instance: MinecraftServerConfig) -> str:
-        "Get the status of the Docker container"
-        return 'Unimplemented'
-    container_status.short_description = 'Container Status'
 
     def install_script(self, instance: MinecraftServerConfig) -> str:
         "Get the install script HTML formatted for display"
@@ -92,3 +91,4 @@ admin.site.register(MinecraftVersion, MinecraftVersionAdmin)
 admin.site.register(ForgeVersion, ForgeVersionAdmin)
 admin.site.register(MinecraftMod, MinecraftModAdmin)
 admin.site.register(MinecraftServerConfig, MinecraftServerAdmin)
+admin.site.register(KeyPair)

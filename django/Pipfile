@@ -17,6 +17,7 @@ python-dateutil = "*"
 psycopg2-binary = "*"
 requests-html = "*"
 pygments = "*"
+fabric = "*"
 
 [requires]
 python_version = "3.7"

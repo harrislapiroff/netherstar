@@ -2,6 +2,7 @@ import os
 
 from django.db import models
 
+from minecraftserver.models.ssh import KeyPair
 from minecraftserver.utils.digitalocean import dropletmanager
 from minecraftserver.utils.provisioning import install_script_for_config
 
@@ -66,6 +67,8 @@ class MinecraftModVersion(models.Model):
 def default_minecraft_version_id():
     return MinecraftVersion.objects.all()[0].pk
 
+def default_ssh_key():
+    return KeyPair.get_default_keypair().pk
 
 class MinecraftServerConfig(models.Model):
     """
@@ -83,9 +86,23 @@ class MinecraftServerConfig(models.Model):
     forge = models.BooleanField()
     mods = models.ManyToManyField(
         MinecraftModVersion,
+        blank=True,
         related_name='+'
     )
+
+    # These fields are for site admin configuration only
+    ssh_key = models.ForeignKey(
+        KeyPair,
+        default=default_ssh_key,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+    )
+
+    # These fields should be read only in any interface
     droplet_id = models.PositiveIntegerField(blank=True, null=True)
+    droplet_ip = models.GenericIPAddressField(blank=True, null=True)
+    last_status = models.TextField(blank=True, null=True)
 
     def create_droplet(self: 'MinecraftServerConfig'):
         droplet = dropletmanager.create_minecraft_droplet(self)

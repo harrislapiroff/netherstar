@@ -124,3 +124,8 @@ def install_script_for_config(config):
         return FORGE_INSTALL_SCRIPT.format(**context)
 
     return VANILLA_INSTALL_SCRIPT.format(**context)
+
+
+class Provisioner:
+    def __init__(self, config, ip_address):
+        pass
