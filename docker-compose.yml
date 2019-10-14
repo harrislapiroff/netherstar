@@ -10,8 +10,6 @@ services:
     - "8000:8000"
     volumes:
     - ./django:/code
-    - /var/run/docker.sock:/var/run/docker.sock
-    - ./data:/data
     environment:
       DATABASE_URL: 'postgres://dbuser:dbpass@postgresql/django'
       DIGITALOCEAN_TOKEN: '${DIGITALOCEAN_TOKEN}'
