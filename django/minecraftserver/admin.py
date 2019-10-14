@@ -4,9 +4,11 @@ from pygments import highlight
 from pygments.lexers import BashLexer
 from pygments.formatters import HtmlFormatter
 
-from minecraftserver.models import MinecraftServer
+from minecraftserver.models import MinecraftServerConfig
 from minecraftserver.models import MinecraftVersion
 from minecraftserver.models import ForgeVersion
+from minecraftserver.models import MinecraftMod
+from minecraftserver.models import MinecraftModVersion
 
 
 class MinecraftServerAdmin(admin.ModelAdmin):
@@ -20,16 +22,18 @@ class MinecraftServerAdmin(admin.ModelAdmin):
     )
     list_display = (
         'name',
-        'eula_accepted',
         'version',
     )
+    filter_horizontal = (
+        'mods',
+    )
 
-    def container_status(self, instance: MinecraftServer) -> str:
+    def container_status(self, instance: MinecraftServerConfig) -> str:
         "Get the status of the Docker container"
         return 'Unimplemented'
     container_status.short_description = 'Container Status'
 
-    def install_script(self, instance: MinecraftServer) -> str:
+    def install_script(self, instance: MinecraftServerConfig) -> str:
         "Get the install script HTML formatted for display"
         html_formatter = HtmlFormatter(cssclass="install-script")
         return mark_safe(
@@ -61,6 +65,22 @@ class MinecraftVersionAdmin(admin.ModelAdmin):
     list_display = ('name', 'download_url', 'release_time')
 
 
+class MinecraftModVersionInline(admin.TabularInline):
+    model = MinecraftModVersion
+    min_num = 1
+    extra = 0
+    verbose_name = 'version'
+    verbose_name_plural = 'versions'
+    filter_horizontal = (
+        'compatible_with',
+    )
+
+
+class MinecraftModAdmin(admin.ModelAdmin):
+    inlines = (
+        MinecraftModVersionInline,
+    )
+
 class ForgeVersionAdmin(admin.ModelAdmin):
     list_display = ('name', 'minecraft_version', 'download_url')
 
@@ -70,4 +90,5 @@ class ForgeVersionAdmin(admin.ModelAdmin):
 
 admin.site.register(MinecraftVersion, MinecraftVersionAdmin)
 admin.site.register(ForgeVersion, ForgeVersionAdmin)
-admin.site.register(MinecraftServer, MinecraftServerAdmin)
+admin.site.register(MinecraftMod, MinecraftModAdmin)
+admin.site.register(MinecraftServerConfig, MinecraftServerAdmin)

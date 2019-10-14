@@ -1,3 +1,5 @@
+import os
+
 from django.db import models
 
 from minecraftserver.utils.digitalocean import dropletmanager
@@ -35,14 +37,43 @@ class ForgeVersion(models.Model):
         return self.name
 
 
+class MinecraftMod(models.Model):
+    name = models.CharField(max_length=50)
+
+    def __str__(self: 'MinecraftMod') -> str:
+        return self.name
+
+
+class MinecraftModVersion(models.Model):
+    mod = models.ForeignKey(
+        MinecraftMod,
+        related_name='versions',
+        on_delete=models.CASCADE
+    )
+    download_file = models.FileField()
+    compatible_with = models.ManyToManyField(
+        MinecraftVersion,
+        related_name='+'
+    )
+
+    def __str__(self: 'MinecraftModVersion') -> str:
+        return '{}: {}'.format(
+            self.mod,
+            os.path.basename(self.download_file.name)
+        )
+
+
 def default_minecraft_version_id():
     return MinecraftVersion.objects.all()[0].pk
 
 
-class MinecraftServer(models.Model):
-    name = models.CharField(max_length=50)
+class MinecraftServerConfig(models.Model):
+    """
+    Configuration details for a Minecraft server
+    """
 
-    eula_accepted = models.BooleanField()
+    name = models.CharField(max_length=50)
+    slug = models.SlugField(max_length=50, unique=True)
     version = models.ForeignKey(
         MinecraftVersion,
         default=default_minecraft_version_id,
@@ -50,16 +81,19 @@ class MinecraftServer(models.Model):
         related_name='servers'
     )
     forge = models.BooleanField()
-
+    mods = models.ManyToManyField(
+        MinecraftModVersion,
+        related_name='+'
+    )
     droplet_id = models.PositiveIntegerField(blank=True, null=True)
 
-    def create_droplet(self):
+    def create_droplet(self: 'MinecraftServerConfig'):
         droplet = dropletmanager.create_minecraft_droplet(self)
         self.droplet_id = droplet.id
         self.save()
 
-    def get_install_script(self):
+    def get_install_script(self: 'MinecraftServerConfig'):
         return install_script_for_config(self)
 
-    def __str__(self: 'MinecraftServer') -> str:
+    def __str__(self: 'MinecraftServerConfig') -> str:
         return self.name

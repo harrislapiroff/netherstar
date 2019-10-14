@@ -1,3 +1,4 @@
 /data/
+/django/media/
 __pycache__
 .env

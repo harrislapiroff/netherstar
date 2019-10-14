@@ -20,6 +20,10 @@ echo "DIGITALOCEAN_TOKEN=<YOUR_TOKEN_HERE>" > .env
 
 # Run this every time you want to start the dashboard
 docker-compose up
+
+# To seed the database with Minecraft and forge versions, run the
+docker-compose run django ./manage.py update_minecraft_versions
+docker-compose run django ./manage.py update_forge_versions
 ```
 
 ⚠️ **This will use your DigitalOcean account to create Droplets with Minecraft
