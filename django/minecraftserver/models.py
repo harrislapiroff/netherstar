@@ -1,6 +1,7 @@
 from django.db import models
 
 from minecraftserver.utils.digitalocean import dropletmanager
+from minecraftserver.utils.provisioning import install_script_for_config
 
 
 class MinecraftVersion(models.Model):
@@ -56,6 +57,9 @@ class MinecraftServer(models.Model):
         droplet = dropletmanager.create_minecraft_droplet(self)
         self.droplet_id = droplet.id
         self.save()
+
+    def get_install_script(self):
+        return install_script_for_config(self)
 
     def __str__(self: 'MinecraftServer') -> str:
         return self.name

@@ -1,4 +1,8 @@
 from django.contrib import admin
+from django.utils.safestring import mark_safe
+from pygments import highlight
+from pygments.lexers import BashLexer
+from pygments.formatters import HtmlFormatter
 
 from minecraftserver.models import MinecraftServer
 from minecraftserver.models import MinecraftVersion
@@ -8,6 +12,7 @@ from minecraftserver.models import ForgeVersion
 class MinecraftServerAdmin(admin.ModelAdmin):
     readonly_fields = (
         'container_status',
+        'install_script',
     )
     actions = (
         'container_start',
@@ -21,8 +26,25 @@ class MinecraftServerAdmin(admin.ModelAdmin):
 
     def container_status(self, instance: MinecraftServer) -> str:
         "Get the status of the Docker container"
-        pass
+        return 'Unimplemented'
     container_status.short_description = 'Container Status'
+
+    def install_script(self, instance: MinecraftServer) -> str:
+        "Get the install script HTML formatted for display"
+        html_formatter = HtmlFormatter(cssclass="install-script")
+        return mark_safe(
+            "".join([
+                highlight(
+                    instance.get_install_script(),
+                    BashLexer(),
+                    html_formatter
+                ),
+                "<style type=\"text/css\">",
+                ".install-script { padding: 5px 10px; border-radius: 4px; }",
+                html_formatter.get_style_defs(),
+                "</style>",
+            ])
+        )
 
     def container_start(self, request, queryset) -> list:
         "Start the Docker container"

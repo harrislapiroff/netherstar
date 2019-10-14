@@ -16,6 +16,7 @@ requests = "*"
 python-dateutil = "*"
 psycopg2-binary = "*"
 requests-html = "*"
+pygments = "*"
 
 [requires]
 python_version = "3.7"
