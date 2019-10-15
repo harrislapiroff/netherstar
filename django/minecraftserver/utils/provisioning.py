@@ -13,9 +13,56 @@ export PATH=/var/minecraft/lib/jdk8/bin:$PATH
 INSTALL_MINECRAFT = """
 mkdir -p /var/minecraft/server
 cd /var/minecraft/server
-echo "eula=true" > eula.txt
 wget {minecraft_download_url}
-java -jar {minecraft_filename} --initSettings
+
+echo "eula=true" > eula.txt
+
+cat >server.properties <<EOL
+broadcast-rcon-to-ops=true
+view-distance=10
+max-build-height=256
+server-ip=
+level-seed=
+rcon.port=25575
+gamemode=survival
+server-port=25565
+allow-nether=true
+enable-command-block=false
+enable-rcon=false
+enable-query=false
+op-permission-level=4
+prevent-proxy-connections=false
+generator-settings=
+resource-pack=
+level-name=world
+rcon.password=
+player-idle-timeout=0
+motd=A Minecraft Server
+query.port=25565
+force-gamemode=false
+hardcore=false
+white-list=false
+broadcast-console-to-ops=true
+pvp=true
+spawn-npcs=true
+generate-structures=true
+spawn-animals=true
+snooper-enabled=true
+difficulty=easy
+function-permission-level=2
+network-compression-threshold=256
+level-type=default
+spawn-monsters=true
+max-tick-time=60000
+enforce-whitelist=false
+use-native-transport=true
+max-players=20
+resource-pack-sha1=
+spawn-protection=16
+online-mode=true
+allow-flight=false
+max-world-size=29999984
+EOL
 """
 
 
@@ -30,7 +77,6 @@ CREATE_SYSUSERS = """
 mkdir -p /usr/lib/sysusers.d
 echo 'u minecraft - "Minecraft Server User"' > /usr/lib/sysusers.d/minecraft.conf
 systemd-sysusers
-chown minecraft /var/minecraft/server/ -R
 """
 
 
@@ -45,7 +91,7 @@ Type=simple
 User=minecraft
 Restart=always
 WorkingDirectory=/var/minecraft/server/
-ExecStart=/var/minecraft/lib/jdk8/bin/java -jar /var/minecraft/server/{minecraft_filename}
+ExecStart=/var/minecraft/lib/jdk8/bin/java -Xms4G -Xmx4G -jar /var/minecraft/server/{minecraft_filename}
 
 [Install]
 WantedBy=multi-user.target
@@ -65,22 +111,11 @@ Type=simple
 User=minecraft
 Restart=always
 WorkingDirectory=/var/minecraft/server/
-ExecStart=/var/minecraft/lib/jdk8/bin/java -jar /var/minecraft/server/{forge_filename}
-
+ExecStart=/var/minecraft/lib/jdk8/bin/java -Xms4G -Xmx4G -jar /var/minecraft/server/{forge_filename} nogui
 [Install]
 WantedBy=multi-user.target
 EOL
 systemctl daemon-reload
-"""
-
-
-RUN_MINECRAFT = """
-systemctl enable minecraft --now
-"""
-
-
-RUN_FORGE = """
-systemctl enable minecraft --now
 """
 
 
@@ -91,7 +126,6 @@ FORGE_INSTALL_SCRIPT = "\n".join([
     INSTALL_FORGE,
     CREATE_SYSUSERS,
     CREATE_FORGE_SYSTEMD_UNIT,
-    RUN_FORGE,
 ])
 
 
@@ -101,7 +135,6 @@ VANILLA_INSTALL_SCRIPT = "\n".join([
     INSTALL_MINECRAFT,
     CREATE_SYSUSERS,
     CREATE_MINECRAFT_SYSTEMD_UNIT,
-    RUN_MINECRAFT,
 ])
 
 
@@ -119,7 +152,7 @@ def install_script_for_config(config):
             'forge_installer_url': forge_version.download_url,
             'forge_installer_filename': forge_version.download_url.split('/')[-1],
             # Can we deduce the filename with more confidence?
-            'forge_filename': forge_version.download_url.split('/')[-1].replace('-installer', '')
+            'forge_filename': forge_version.download_url.split('/')[-1].replace('-installer', '*')
         })
         return FORGE_INSTALL_SCRIPT.format(**context)
 

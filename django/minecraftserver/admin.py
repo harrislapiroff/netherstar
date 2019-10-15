@@ -10,6 +10,7 @@ from minecraftserver.models import ForgeVersion
 from minecraftserver.models import MinecraftMod
 from minecraftserver.models import MinecraftModVersion
 from minecraftserver.models import KeyPair
+from minecraftserver.utils.digitalocean import DigitalOceanProvider
 
 
 class MinecraftServerAdmin(admin.ModelAdmin):
@@ -20,8 +21,8 @@ class MinecraftServerAdmin(admin.ModelAdmin):
         'install_script',
     )
     actions = (
-        'container_start',
-        'container_stop',
+        'restart_servers',
+        'rebuild_servers',
     )
     list_display = (
         'name',
@@ -49,15 +50,18 @@ class MinecraftServerAdmin(admin.ModelAdmin):
             ])
         )
 
-    def container_start(self, request, queryset) -> list:
+    def restart_servers(self, request, queryset) -> list:
         "Start the Docker container"
         for instance in queryset.all():
-            instance.create_droplet()
-    container_start.short_description = 'Start Servers'
+            DigitalOceanProvider(instance).rebuild_minecraft_droplet(fast=True)
+    restart_servers.short_description = 'Restart Servers'
 
-    def container_stop(self, request, queryset) -> list:
-        pass
-    container_stop.short_description = 'Stop Servers'
+    def rebuild_servers(self, request, queryset) -> list:
+        "Start the Docker container"
+        for instance in queryset.all():
+            DigitalOceanProvider(instance).rebuild_minecraft_droplet()
+    rebuild_servers.short_description = 'Rebuild Servers'
+
 
 
 class MinecraftVersionAdmin(admin.ModelAdmin):

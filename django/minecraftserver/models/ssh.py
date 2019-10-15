@@ -25,7 +25,7 @@ class KeyPair(models.Model):
         )
 
     @classmethod
-    def get_default_keypair(cls: type):
+    def get_default_keypair(cls: type) -> 'KeyPair':
         """
         Either return the earliest created keypair or create a new one if no
         keypair objects exist
@@ -36,6 +36,9 @@ class KeyPair(models.Model):
         except IndexError:
             return cls.generate_rsa_keypair()
 
-    def as_pkey(self: 'KeyPair'):
+    def as_pkey(self: 'KeyPair') -> RSAKey:
         private_key = StringIO(self.private_key)
         return RSAKey.from_private_key(private_key)
+
+    def __str__(self: 'KeyPair') -> str:
+        return 'Key generated at {}'.format(self.generated_at.strftime('%c'))

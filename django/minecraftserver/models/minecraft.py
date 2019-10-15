@@ -3,7 +3,6 @@ import os
 from django.db import models
 
 from minecraftserver.models.ssh import KeyPair
-from minecraftserver.utils.digitalocean import dropletmanager
 from minecraftserver.utils.provisioning import install_script_for_config
 
 
@@ -57,10 +56,13 @@ class MinecraftModVersion(models.Model):
         related_name='+'
     )
 
+    def filename(self: 'MinecraftModVersion') -> str:
+        return os.path.basename(self.download_file.name)
+
     def __str__(self: 'MinecraftModVersion') -> str:
         return '{}: {}'.format(
             self.mod,
-            os.path.basename(self.download_file.name)
+            self.filename()
         )
 
 
@@ -96,6 +98,7 @@ class MinecraftServerConfig(models.Model):
         default=default_ssh_key,
         blank=True,
         null=True,
+        verbose_name='SSH key',
         on_delete=models.SET_NULL
     )
 
@@ -103,11 +106,6 @@ class MinecraftServerConfig(models.Model):
     droplet_id = models.PositiveIntegerField(blank=True, null=True)
     droplet_ip = models.GenericIPAddressField(blank=True, null=True)
     last_status = models.TextField(blank=True, null=True)
-
-    def create_droplet(self: 'MinecraftServerConfig'):
-        droplet = dropletmanager.create_minecraft_droplet(self)
-        self.droplet_id = droplet.id
-        self.save()
 
     def get_install_script(self: 'MinecraftServerConfig'):
         return install_script_for_config(self)
