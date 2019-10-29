@@ -18,6 +18,7 @@ psycopg2-binary = "*"
 requests-html = "*"
 pygments = "*"
 fabric = "*"
+humanize = "*"
 
 [requires]
 python_version = "3.7"

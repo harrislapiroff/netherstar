@@ -3,6 +3,7 @@ import os
 from django.db import models
 
 from minecraftserver.models.ssh import KeyPair
+from minecraftserver.models.sitesettings import SiteSettings
 from minecraftserver.utils.provisioning import install_script_for_config
 
 
@@ -67,10 +68,12 @@ class MinecraftModVersion(models.Model):
 
 
 def default_minecraft_version_id():
-    return MinecraftVersion.objects.all()[0].pk
+    return SiteSettings.load().default_minecraft_verion
 
-def default_ssh_key():
-    return KeyPair.get_default_keypair().pk
+
+def default_keypair():
+    return SiteSettings.load().default_keypair
+
 
 class MinecraftServerConfig(models.Model):
     """
@@ -95,7 +98,7 @@ class MinecraftServerConfig(models.Model):
     # These fields are for site admin configuration only
     ssh_key = models.ForeignKey(
         KeyPair,
-        default=default_ssh_key,
+        default=default_keypair,
         blank=True,
         null=True,
         verbose_name='SSH key',

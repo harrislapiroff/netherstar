@@ -1,7 +1,6 @@
 from urllib.parse import urlparse
 
 from requests_html import HTMLSession
-from dateutil.parser import isoparse
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
@@ -9,6 +8,7 @@ from minecraftserver.models import ForgeVersion, MinecraftVersion
 
 
 FORGE_RESULT_STRING = 'Forge Version {:25} {}'
+
 
 class Command(BaseCommand):
     help = 'Get a list of available Forge versions from minecraftforge.net to store in database'

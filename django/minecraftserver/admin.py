@@ -1,5 +1,8 @@
 from django.contrib import admin
 from django.utils.safestring import mark_safe
+from django.shortcuts import redirect
+from django.urls import reverse
+
 from pygments import highlight
 from pygments.lexers import BashLexer
 from pygments.formatters import HtmlFormatter
@@ -10,6 +13,7 @@ from minecraftserver.models import ForgeVersion
 from minecraftserver.models import MinecraftMod
 from minecraftserver.models import MinecraftModVersion
 from minecraftserver.models import KeyPair
+from minecraftserver.models import SiteSettings
 from minecraftserver.utils.digitalocean import DigitalOceanProvider
 
 
@@ -63,7 +67,6 @@ class MinecraftServerAdmin(admin.ModelAdmin):
     rebuild_servers.short_description = 'Rebuild Servers'
 
 
-
 class MinecraftVersionAdmin(admin.ModelAdmin):
     list_display = ('name', 'download_url', 'release_time')
 
@@ -84,6 +87,7 @@ class MinecraftModAdmin(admin.ModelAdmin):
         MinecraftModVersionInline,
     )
 
+
 class ForgeVersionAdmin(admin.ModelAdmin):
     list_display = ('name', 'minecraft_version', 'download_url')
 
@@ -91,8 +95,29 @@ class ForgeVersionAdmin(admin.ModelAdmin):
         return self.minecraft_version.name
 
 
+class SiteSettingsAdmin(admin.ModelAdmin):
+    filter_horizontal = (
+        'permitted_do_images',
+        'permitted_do_sizes',
+    )
+
+    def changelist_view(self, *args, **kwargs):
+        sitesettings = SiteSettings.load()
+        return redirect(reverse(
+            'admin:minecraftserver_sitesettings_change',
+            args=[sitesettings.pk]
+        ))
+
+    def has_delete_permission(self, request, instance=None):
+        return False
+
+    def has_add_permission(self, request):
+        return False
+
+
 admin.site.register(MinecraftVersion, MinecraftVersionAdmin)
 admin.site.register(ForgeVersion, ForgeVersionAdmin)
 admin.site.register(MinecraftMod, MinecraftModAdmin)
 admin.site.register(MinecraftServerConfig, MinecraftServerAdmin)
 admin.site.register(KeyPair)
+admin.site.register(SiteSettings, SiteSettingsAdmin)

@@ -21,7 +21,10 @@ echo "DIGITALOCEAN_TOKEN=<YOUR_TOKEN_HERE>" > .env
 # Run this every time you want to start the dashboard
 docker-compose up
 
-# To seed the database with Minecraft and forge versions, run the
+# To seed the database with DigitalOcean sizes and images run
+docker-compose run django ./manage.py sync_digitalocean_data
+
+# To seed the database with Minecraft and forge versions, run
 docker-compose run django ./manage.py update_minecraft_versions
 docker-compose run django ./manage.py update_forge_versions
 ```
