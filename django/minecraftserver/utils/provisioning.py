@@ -146,8 +146,8 @@ def install_script_for_config(config):
         'minecraft_filename': mc_version.download_url.split('/')[-1],
     }
 
-    if config.forge:
-        forge_version = config.version.forge_version
+    if config.forge_version:
+        forge_version = config.forge_version
         context.update({
             'forge_installer_url': forge_version.download_url,
             'forge_installer_filename': forge_version.download_url.split('/')[-1],

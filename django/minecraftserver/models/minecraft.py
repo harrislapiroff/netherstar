@@ -22,20 +22,29 @@ class MinecraftVersion(models.Model):
 class ForgeVersion(models.Model):
     name = models.CharField(max_length=50)
     download_url = models.URLField()
-    minecraft_version = models.OneToOneField(
+    minecraft_version = models.ForeignKey(
         MinecraftVersion,
         help_text='Supported Minecraft version',
         blank=True,
         null=True,
         on_delete=models.SET_NULL,
-        related_name='forge_version'
+        related_name='forge_versions'
     )
+    latest = models.BooleanField()
+    recommended = models.BooleanField()
 
     class Meta:
-        ordering = ('-minecraft_version__release_time',)
+        ordering = ('-minecraft_version__release_time', 'pk')
 
     def __str__(self: 'ForgeVersion'):
-        return self.name
+        result = '{}-{}'.format(self.minecraft_version.name, self.name)
+        if self.latest and self.recommended:
+            result = result + ' (Latest, Recommended)'
+        elif self.latest:
+            result = result + ' (Latest)'
+        elif self.recommended:
+            result = result + ' (Recommended)'
+        return result
 
 
 class MinecraftMod(models.Model):
@@ -88,7 +97,13 @@ class MinecraftServerConfig(models.Model):
         on_delete=models.PROTECT,
         related_name='servers'
     )
-    forge = models.BooleanField()
+    forge_version = models.ForeignKey(
+        ForgeVersion,
+        blank=True,
+        null=True,
+        related_name='+',
+        on_delete=models.PROTECT
+    )
     mods = models.ManyToManyField(
         MinecraftModVersion,
         blank=True,

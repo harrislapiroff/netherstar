@@ -89,7 +89,14 @@ class MinecraftModAdmin(admin.ModelAdmin):
 
 
 class ForgeVersionAdmin(admin.ModelAdmin):
-    list_display = ('name', 'minecraft_version', 'download_url')
+    list_display = (
+        '__str__',
+        'name',
+        'minecraft_version',
+        'latest',
+        'recommended',
+        'download_url',
+    )
 
     def minecraft_version(self, instance: ForgeVersion) -> str:
         return self.minecraft_version.name
