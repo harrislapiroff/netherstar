@@ -58,7 +58,7 @@ class DigitalOceanProvider:
 
     def _create_droplet(self):
         "Create a new Digital Ocean Droplet"
-        ssh_key_id = self.get_ssh_key_id(self.config.ssh_key)
+        ssh_key_id = self.get_ssh_key_id(self.config.ssh_key)  # noqa: F841
         droplet = digitalocean.Droplet(
             token=self._token,
             name="MCServer-{}".format(self.config.id),
