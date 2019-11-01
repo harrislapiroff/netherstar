@@ -1,10 +1,15 @@
 import os
 
+from django.core.exceptions import ValidationError
 from django.db import models
 
+from djocean.models import Image, Size, Region
 from minecraftserver.models.ssh import KeyPair
-from minecraftserver.models.sitesettings import SiteSettings
 from minecraftserver.utils.provisioning import install_script_for_config
+from minecraftserver.utils.sitesettings import allowed_images_q
+from minecraftserver.utils.sitesettings import allowed_sizes_q
+from minecraftserver.utils.sitesettings import default_minecraft_version_id
+from minecraftserver.utils.sitesettings import default_keypair
 
 
 class MinecraftVersion(models.Model):
@@ -76,14 +81,6 @@ class MinecraftModVersion(models.Model):
         )
 
 
-def default_minecraft_version_id():
-    return SiteSettings.load().default_minecraft_verion
-
-
-def default_keypair():
-    return SiteSettings.load().default_keypair
-
-
 class MinecraftServerConfig(models.Model):
     """
     Configuration details for a Minecraft server
@@ -110,6 +107,25 @@ class MinecraftServerConfig(models.Model):
         related_name='+'
     )
 
+    # DigitalOcean configuration
+    droplet_image = models.ForeignKey(
+        Image,
+        limit_choices_to=allowed_images_q,
+        related_name='+',
+        on_delete=models.PROTECT
+    )
+    droplet_size = models.ForeignKey(
+        Size,
+        limit_choices_to=allowed_sizes_q,
+        related_name='+',
+        on_delete=models.PROTECT
+    )
+    droplet_region = models.ForeignKey(
+        Region,
+        related_name='+',
+        on_delete=models.PROTECT
+    )
+
     # These fields are for site admin configuration only
     ssh_key = models.ForeignKey(
         KeyPair,
@@ -124,6 +140,23 @@ class MinecraftServerConfig(models.Model):
     droplet_id = models.PositiveIntegerField(blank=True, null=True)
     droplet_ip = models.GenericIPAddressField(blank=True, null=True)
     last_status = models.TextField(blank=True, null=True)
+
+    def clean(self):
+        errors = []
+        if self.droplet_region not in self.droplet_image.regions.all():
+            error_message = 'Image {} not available in region {}'.format(
+                self.droplet_image,
+                self.droplet_region
+            )
+            errors.append({'region': error_message})
+        if self.droplet_region not in self.droplet_size.regions.all():
+            error_message = 'Size {} not available in region {}'.format(
+                self.droplet_size,
+                self.droplet_region
+            )
+            errors.append({'region': error_message})
+        if errors:
+            raise ValidationError(errors)
 
     def get_install_script(self: 'MinecraftServerConfig'):
         return install_script_for_config(self)

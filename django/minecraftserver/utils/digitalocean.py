@@ -13,9 +13,6 @@ class DigitalOceanError(Exception):
 
 class DigitalOceanProvider:
     tag = "minecraftserver"
-    region = "nyc1"
-    image = "debian-9-x64"
-    size = "s-2vcpu-4gb"
 
     poll_interval = 5
     timeout = 600
@@ -62,9 +59,9 @@ class DigitalOceanProvider:
         droplet = digitalocean.Droplet(
             token=self._token,
             name="MCServer-{}".format(self.config.id),
-            region=self.region,
-            image=self.image,
-            size_slug=self.size,
+            region=self.config.droplet_region.slug,
+            image=self.config.droplet_image.slug,
+            size_slug=self.config.droplet_size.slug,
             # TODO: Set this to use the key from `get_ssh_key_id`
             ssh_keys=self.get_ssh_keys(),
             # volumes=[volume.id],
@@ -72,6 +69,8 @@ class DigitalOceanProvider:
             monitoring=True
         )
         droplet.create()
+        self.config.droplet_id = droplet.id
+        self.config.save()
         self.droplet = droplet
 
     def _rebuild_droplet(self, fast: bool = False):
@@ -99,17 +98,14 @@ class DigitalOceanProvider:
 
     def _wait_for_droplet(self):
         "Wait for the droplet to come online"
-        # Get fresh status
-        self.droplet.load()
-
         # Wait for status to become active
         time = 0
         while not self.droplet.status == 'active':
+            self.droplet.load()
             time += self.poll_interval
             if time > self.timeout:
                 raise DigitalOceanError("Timed out waiting for droplet to come up")
             sleep(self.poll_interval)
-            self.droplet.load()
 
         # Stash the IP address in the config
         self.config.droplet_ip = self.droplet.ip_address

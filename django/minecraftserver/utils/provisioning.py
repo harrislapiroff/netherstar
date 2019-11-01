@@ -91,7 +91,7 @@ Type=simple
 User=minecraft
 Restart=always
 WorkingDirectory=/var/minecraft/server/
-ExecStart=/var/minecraft/lib/jdk8/bin/java -Xms4G -Xmx4G -jar /var/minecraft/server/{minecraft_filename}
+ExecStart=/usr/bin/bash -c '/var/minecraft/lib/jdk8/bin/java -Xms{memory_size} -Xmx{memory_size} -jar /var/minecraft/server/{minecraft_filename}'
 
 [Install]
 WantedBy=multi-user.target
@@ -111,7 +111,7 @@ Type=simple
 User=minecraft
 Restart=always
 WorkingDirectory=/var/minecraft/server/
-ExecStart=/var/minecraft/lib/jdk8/bin/java -Xms4G -Xmx4G -jar /var/minecraft/server/{forge_filename} nogui
+ExecStart=/usr/bin/bash -c '/var/minecraft/lib/jdk8/bin/java -Xms{memory_size} -Xmx{memory_size} -jar /var/minecraft/server/{forge_filename} nogui'
 [Install]
 WantedBy=multi-user.target
 EOL
@@ -144,6 +144,7 @@ def install_script_for_config(config):
     context = {
         'minecraft_download_url': mc_version.download_url,
         'minecraft_filename': mc_version.download_url.split('/')[-1],
+        'memory_size': '{}M'.format(config.droplet_size.memory)
     }
 
     if config.forge_version:

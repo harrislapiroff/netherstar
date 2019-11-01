@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
+from humanize import naturalsize
 
 
 class Region(models.Model):
@@ -60,7 +61,7 @@ class Image(models.Model):
     error_message = models.TextField(null=True, blank=True)
 
     def __str__(self):
-        return self.name
+        return '{} {}'.format(self.distribution, self.name)
 
 
 class Size(models.Model):
@@ -77,5 +78,22 @@ class Size(models.Model):
     class Meta:
         ordering = ['price_hourly']
 
+    def disk_size_display(self):
+        # multiply by 1000^2 to convert to kb, then format
+        return naturalsize(self.disk * 1000 * 1000, format='%.0f')
+    disk_size_display.short_description = 'disk size'
+
+    def memory_size_display(self):
+        # multiply by 1024^2 to convert to kib, then format
+        # even though DO's docs say they measure in megabytes, I suspect they
+        # are using gibibytes because that math makes the numbers match the
+        # names
+        return naturalsize(self.memory * 1024 * 1024, format='%.0f', binary=True)
+    memory_size_display.short_description = 'memory'
+
     def __str__(self):
-        return self.slug
+        return '{} / {} SSD (${:.2f}/mo)'.format(
+            self.memory_size_display(),
+            self.disk_size_display(),
+            float(self.price_monthly)
+        )
